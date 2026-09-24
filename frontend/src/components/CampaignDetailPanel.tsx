@@ -1,14 +1,17 @@
 
 
-import { FormEvent, useState, useEffect, useCallback } from 'react';
+import { FormEvent, useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { MousePointer2, Download, Link as LinkIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Campaign, AppConfig } from '../types/campaign';
 import CopyButton from './CopyButton';
 import { AddressAvatar } from './AddressAvatar';
 import { EmptyState } from './EmptyState';
-import { ContributorSummary } from './ContributorSummary';
 import { CampaignImage } from './CampaignImage';
+
+const ContributorSummary = lazy(() =>
+  import('./ContributorSummary').then((m) => ({ default: m.ContributorSummary })),
+);
 import { Countdown } from './Countdown';
 import { useCampaignShareCard } from './CampaignShareCard';
 import { useToast } from '../hooks/useToast';
@@ -325,11 +328,13 @@ export function CampaignDetailPanel({
         </article>
       </div>
 
-      <ContributorSummary
-        campaignId={activeCampaign.id}
-        assetCode={activeCampaign.assetCode}
-        isLoading={isLoading}
-      />
+      <Suspense fallback={<div className="contributor-summary" aria-busy="true">Loading contributors…</div>}>
+        <ContributorSummary
+          campaignId={activeCampaign.id}
+          assetCode={activeCampaign.assetCode}
+          isLoading={isLoading}
+        />
+      </Suspense>
 
       {!walletReady ? (
         <p className="pending-note">

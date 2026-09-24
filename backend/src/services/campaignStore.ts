@@ -859,11 +859,21 @@ export function getCampaignWithProgress(campaignId: string, pledgePreviewLimit =
     return undefined;
   }
 
+  // Incremental/bounded detail: fetch only preview pledges via LIMIT in SQL, not full scan+slice.
+  // History is loaded incrementally via GET /api/campaigns/:id/history, so omit it here.
+  const db = getDb();
+  const previewRows = db
+    .prepare(
+      `SELECT * FROM pledges WHERE campaign_id = ? ORDER BY created_at DESC, id DESC LIMIT ?`,
+    )
+    .all(campaignId, pledgePreviewLimit) as PledgeRow[];
+  const previewPledges = previewRows.map(rowToPledge);
+
   return {
     ...campaign,
     progress: calculateProgress(campaign),
-    pledges: getPledges(campaignId).slice(0, pledgePreviewLimit),
-    history: getCampaignHistory(campaignId),
+    pledges: previewPledges,
+    history: [],
   };
 }
 
