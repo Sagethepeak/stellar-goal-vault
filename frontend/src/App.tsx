@@ -4,12 +4,17 @@ import { CampaignDetailPanel } from "./components/CampaignDetailPanel";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { FundedConfetti } from "./components/FundedConfetti";
 import { KeyboardShortcutsOverlay } from "./components/KeyboardShortcutsOverlay";
+import { lazy, Suspense } from "react";
 import { CampaignsTable } from "./components/CampaignsTable";
 import { CampaignTimeline } from "./components/CampaignTimeline";
 import { NotificationBell } from "./components/NotificationBell";
 import { CreateCampaignForm } from "./components/CreateCampaignForm";
-import { CreatorAnalytics } from "./components/CreatorAnalytics";
 import { IssueBacklog } from "./components/IssueBacklog";
+import { SkeletonAnalytics } from "./components/SkeletonAnalytics";
+
+const CreatorAnalytics = lazy(() =>
+  import("./components/CreatorAnalytics").then((m) => ({ default: m.CreatorAnalytics })),
+);
 import { InstallPrompt } from "./components/InstallPrompt";
 import { OfflineBanner } from "./components/OfflineBanner";
 import {
@@ -24,7 +29,7 @@ import {
   createCampaign,
   getAppConfig,
   getCampaign,
-  getCampaignHistory,
+  getCampaignHistoryPage,
   listCampaigns,
   listOpenIssues,
   reconcilePledge,
@@ -155,6 +160,9 @@ function App() {
   const campaignParam = searchParams.get('campaign');
   const [issues, setIssues] = useState<OpenIssue[]>([]);
   const [history, setHistory] = useState<CampaignEvent[]>([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [hasMoreHistory, setHasMoreHistory] = useState(false);
+  const [isLoadingMoreHistory, setIsLoadingMoreHistory] = useState(false);
   const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
     paramId ?? campaignParam ?? null,
@@ -311,11 +319,43 @@ function App() {
   async function refreshHistory(campaignId: string | null) {
     if (!campaignId) {
       setHistory([]);
+      setHistoryPage(1);
+      setHasMoreHistory(false);
       return;
     }
 
-    const data = await getCampaignHistory(campaignId);
+    const { data, hasMore } = await getCampaignHistoryPage(campaignId, { page: 1, pageSize: 20 });
     setHistory(data);
+    setHistoryPage(1);
+    setHasMoreHistory(hasMore);
+  }
+
+  async function loadMoreHistory() {
+    if (!selectedCampaignId || !hasMoreHistory || isLoadingMoreHistory || isSelectedLoading) {
+      return;
+    }
+    setIsLoadingMoreHistory(true);
+    try {
+      const nextPage = historyPage + 1;
+      const { data, hasMore } = await getCampaignHistoryPage(selectedCampaignId, {
+        page: nextPage,
+        pageSize: 20,
+      });
+      // Preserve ordering: backend already sorted, append unseen events preserving timestamp,id order
+      setHistory((current) => {
+        const seen = new Set(current.map((e) => e.id));
+        const unseen = data.filter((e) => !seen.has(e.id));
+        const merged = [...current, ...unseen];
+        merged.sort((a, b) => a.timestamp - b.timestamp || a.id - b.id);
+        return merged;
+      });
+      setHistoryPage(nextPage);
+      setHasMoreHistory(hasMore);
+    } catch (error) {
+      addToast(getErrorMessage(error), 'error');
+    } finally {
+      setIsLoadingMoreHistory(false);
+    }
   }
 
   async function refreshSelectedCampaign(campaignId: string | null) {
@@ -367,9 +407,11 @@ function App() {
       let data: Campaign[] = [];
       try {
         if (restoredState && !requestedCampaignId) {
+          // Bounded initial work: cap restored pages to 3 to avoid unbounded fetch from tampered storage
+          const boundedPages = Math.min(Math.max(1, restoredState.pages), 3);
           data = await loadInitialCampaignPages(
             restoredState.search,
-            Math.max(1, restoredState.pages),
+            boundedPages,
           );
           requestAnimationFrame(() => {
             window.scrollTo(0, restoredState?.scrollY ?? 0);
@@ -745,11 +787,13 @@ function App() {
       {selectedCampaign && (
         <section className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <ErrorBoundary componentName="CreatorAnalytics">
-            <CreatorAnalytics
-              creatorAddress={selectedCampaign.creator}
-              campaigns={campaigns}
-              isLoading={isCampaignsLoading || initialLoad}
-            />
+            <Suspense fallback={<SkeletonAnalytics />}>
+              <CreatorAnalytics
+                creatorAddress={selectedCampaign.creator}
+                campaigns={campaigns}
+                isLoading={isCampaignsLoading || initialLoad}
+              />
+            </Suspense>
           </ErrorBoundary>
         </section>
       )}
@@ -808,6 +852,9 @@ function App() {
           isLoading={isSelectedLoading || initialLoad}
           targetAmount={selectedCampaign?.targetAmount}
           pledgedAmount={selectedCampaign?.pledgedAmount}
+          hasMore={hasMoreHistory}
+          isLoadingMore={isLoadingMoreHistory}
+          onLoadMore={() => void loadMoreHistory()}
         />
       </section>
 
