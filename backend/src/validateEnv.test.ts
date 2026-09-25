@@ -36,12 +36,16 @@ describe('Environment & Request Input Configuration Validation', () => {
 
   it('fails in production when ALLOWED_ORIGINS uses wildcard *', () => {
     const env = { ...validProdEnv, ALLOWED_ORIGINS: '*' };
-    expect(() => validateEnv(env)).toThrow(/ALLOWED_ORIGINS must be set to explicit allowed origins in production/);
+    expect(() => validateEnv(env)).toThrow(
+      /ALLOWED_ORIGINS must be set to explicit allowed origins in production/,
+    );
   });
 
   it('fails in production when ALLOWED_ORIGINS is empty', () => {
     const env = { ...validProdEnv, ALLOWED_ORIGINS: '' };
-    expect(() => validateEnv(env)).toThrow(/ALLOWED_ORIGINS must be set to explicit allowed origins in production/);
+    expect(() => validateEnv(env)).toThrow(
+      /ALLOWED_ORIGINS must be set to explicit allowed origins in production/,
+    );
   });
 
   it('fails in production when SOROBAN_RPC_URL is missing', () => {

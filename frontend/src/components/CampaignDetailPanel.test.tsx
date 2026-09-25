@@ -61,12 +61,8 @@ describe('CampaignDetailPanel', () => {
   it('renders loading state', () => {
     render(
       <BrowserRouter>
-        <CampaignDetailPanel
-          campaign={null}
-          appConfig={mockConfig}
-          isLoading={true}
-        />
-      </BrowserRouter>
+        <CampaignDetailPanel campaign={null} appConfig={mockConfig} isLoading={true} />
+      </BrowserRouter>,
     );
     expect(screen.getByRole('region')).toBeInTheDocument();
   });
@@ -74,12 +70,8 @@ describe('CampaignDetailPanel', () => {
   it('renders not found state when notFoundCampaignId is provided', () => {
     render(
       <BrowserRouter>
-        <CampaignDetailPanel
-          campaign={null}
-          appConfig={mockConfig}
-          notFoundCampaignId="999"
-        />
-      </BrowserRouter>
+        <CampaignDetailPanel campaign={null} appConfig={mockConfig} notFoundCampaignId="999" />
+      </BrowserRouter>,
     );
     expect(screen.getByText('Campaign not found')).toBeInTheDocument();
     expect(screen.getByText(/campaign #999 does not exist/i)).toBeInTheDocument();
@@ -89,12 +81,8 @@ describe('CampaignDetailPanel', () => {
   it('renders empty state when no campaign is selected', () => {
     render(
       <BrowserRouter>
-        <CampaignDetailPanel
-          campaign={null}
-          appConfig={mockConfig}
-          isLoading={false}
-        />
-      </BrowserRouter>
+        <CampaignDetailPanel campaign={null} appConfig={mockConfig} isLoading={false} />
+      </BrowserRouter>,
     );
     expect(screen.getByText('Campaign actions')).toBeInTheDocument();
   });
@@ -102,12 +90,8 @@ describe('CampaignDetailPanel', () => {
   it('renders campaign details when campaign is provided', () => {
     render(
       <BrowserRouter>
-        <CampaignDetailPanel
-          campaign={mockCampaign}
-          appConfig={mockConfig}
-          isLoading={false}
-        />
-      </BrowserRouter>
+        <CampaignDetailPanel campaign={mockCampaign} appConfig={mockConfig} isLoading={false} />
+      </BrowserRouter>,
     );
     expect(screen.getByText('Test Campaign')).toBeInTheDocument();
   });
@@ -116,12 +100,8 @@ describe('CampaignDetailPanel', () => {
     it('handles missing data gracefully when campaign is null', () => {
       render(
         <BrowserRouter>
-          <CampaignDetailPanel
-            campaign={null}
-            appConfig={mockConfig}
-            isLoading={false}
-          />
-        </BrowserRouter>
+          <CampaignDetailPanel campaign={null} appConfig={mockConfig} isLoading={false} />
+        </BrowserRouter>,
       );
       // Should not crash, should show empty state or loading
       expect(screen.queryByText('Test Campaign')).not.toBeInTheDocument();
@@ -136,7 +116,7 @@ describe('CampaignDetailPanel', () => {
             appConfig={mockConfig}
             isLoading={false}
           />
-        </BrowserRouter>
+        </BrowserRouter>,
       );
       // Should not crash on invalid ID
       expect(screen.getByRole('region')).toBeInTheDocument();
@@ -144,7 +124,7 @@ describe('CampaignDetailPanel', () => {
 
     it('handles duplicate actions by preventing multiple submissions', async () => {
       const mockOnPledge = vi.fn().mockRejectedValue(new Error('Duplicate pledge'));
-      
+
       // Mock the pledge function to simulate duplicate action
       vi.doMock('../services/campaignService', () => ({
         pledgeCampaign: mockOnPledge,
@@ -152,12 +132,8 @@ describe('CampaignDetailPanel', () => {
 
       render(
         <BrowserRouter>
-          <CampaignDetailPanel
-            campaign={mockCampaign}
-            appConfig={mockConfig}
-            isLoading={false}
-          />
-        </BrowserRouter>
+          <CampaignDetailPanel campaign={mockCampaign} appConfig={mockConfig} isLoading={false} />
+        </BrowserRouter>,
       );
 
       // Attempt to trigger a pledge action
@@ -179,12 +155,8 @@ describe('CampaignDetailPanel', () => {
 
       render(
         <BrowserRouter>
-          <CampaignDetailPanel
-            campaign={mockCampaign}
-            appConfig={mockConfig}
-            isLoading={false}
-          />
-        </BrowserRouter>
+          <CampaignDetailPanel campaign={mockCampaign} appConfig={mockConfig} isLoading={false} />
+        </BrowserRouter>,
       );
 
       // Component should still render despite service errors
@@ -199,12 +171,8 @@ describe('CampaignDetailPanel', () => {
 
       render(
         <BrowserRouter>
-          <CampaignDetailPanel
-            campaign={mockCampaign}
-            appConfig={mockConfig}
-            isLoading={false}
-          />
-        </BrowserRouter>
+          <CampaignDetailPanel campaign={mockCampaign} appConfig={mockConfig} isLoading={false} />
+        </BrowserRouter>,
       );
 
       // Component should still render despite permission errors

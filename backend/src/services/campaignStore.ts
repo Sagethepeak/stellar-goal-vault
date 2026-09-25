@@ -398,7 +398,9 @@ export function initCampaignStore(): void {
     FOREIGN KEY (campaign_id) REFERENCES campaigns(id)
   );`);
   db.exec('CREATE INDEX IF NOT EXISTS idx_pledges_campaign_id ON pledges(campaign_id);');
-  db.exec('CREATE INDEX IF NOT EXISTS idx_pledges_contributor_created_at ON pledges(contributor, created_at);');
+  db.exec(
+    'CREATE INDEX IF NOT EXISTS idx_pledges_contributor_created_at ON pledges(contributor, created_at);',
+  );
   db.exec('CREATE INDEX IF NOT EXISTS idx_pledges_transaction_hash ON pledges(transaction_hash);');
 }
 
@@ -491,7 +493,6 @@ export interface CampaignDetailResult {
   pledges?: PledgeRecord[];
   history?: BlockchainMetadata[];
 }
-
 
 export interface ListCampaignsResult {
   campaigns: CampaignRecord[];
@@ -612,7 +613,9 @@ export function listCampaigns(options?: ListCampaignsOptions): ListCampaignsResu
         params.push(now);
         break;
       case 'open':
-        whereClauses.push(`claimed_at IS NULL AND pledged_amount < target_amount AND deadline * 1000 >= ?`);
+        whereClauses.push(
+          `claimed_at IS NULL AND pledged_amount < target_amount AND deadline * 1000 >= ?`,
+        );
         params.push(now);
         break;
     }
@@ -685,9 +688,11 @@ export function listCampaigns(options?: ListCampaignsOptions): ListCampaignsResu
     void _pledgeCount;
 
     const now = nowInMilliseconds();
-    const failResult = db.prepare(
-      `UPDATE campaigns SET failed_at = ? WHERE id = ? AND failed_at IS NULL AND claimed_at IS NULL AND pledged_amount < target_amount AND deadline * 1000 < ?`,
-    ).run(campaignRow.deadline, campaignRow.id, now);
+    const failResult = db
+      .prepare(
+        `UPDATE campaigns SET failed_at = ? WHERE id = ? AND failed_at IS NULL AND claimed_at IS NULL AND pledged_amount < target_amount AND deadline * 1000 < ?`,
+      )
+      .run(campaignRow.deadline, campaignRow.id, now);
     if (failResult.changes === 1) {
       campaignRow.failed_at = campaignRow.deadline;
       void dispatchWebhook('campaign_failed', campaignRow.id, {
@@ -734,9 +739,11 @@ export function getCampaign(
 
   if (row) {
     const now = nowInMilliseconds();
-    const failResult = db.prepare(
-      `UPDATE campaigns SET failed_at = ? WHERE id = ? AND failed_at IS NULL AND claimed_at IS NULL AND pledged_amount < target_amount AND deadline * 1000 < ?`,
-    ).run(row.deadline, row.id, now);
+    const failResult = db
+      .prepare(
+        `UPDATE campaigns SET failed_at = ? WHERE id = ? AND failed_at IS NULL AND claimed_at IS NULL AND pledged_amount < target_amount AND deadline * 1000 < ?`,
+      )
+      .run(row.deadline, row.id, now);
     if (failResult.changes === 1) {
       row.failed_at = row.deadline;
       void dispatchWebhook('campaign_failed', row.id, {
@@ -1065,17 +1072,12 @@ export function addPledge(campaignId: string, input: PledgeInput): CampaignRecor
     );
 
     // Check if contributor has reached their limit and record event
-    if (
-      campaign.maxPerContributor !== undefined &&
-      campaign.maxPerContributor > 0
-    ) {
-      const newContributorTotal = round(
-        getContributorPledgedTotal(campaignId, input.contributor),
-      );
+    if (campaign.maxPerContributor !== undefined && campaign.maxPerContributor > 0) {
+      const newContributorTotal = round(getContributorPledgedTotal(campaignId, input.contributor));
       if (newContributorTotal >= campaign.maxPerContributor) {
         recordEvent(
           campaignId,
-          "pledge_limit_reached",
+          'pledge_limit_reached',
           createdAt,
           input.contributor,
           newContributorTotal,
@@ -1083,7 +1085,7 @@ export function addPledge(campaignId: string, input: PledgeInput): CampaignRecor
             maxPerContributor: campaign.maxPerContributor,
             assetCode,
           },
-          { source: "local" } as BlockchainMetadata,
+          { source: 'local' } as BlockchainMetadata,
         );
       }
     }
@@ -1156,8 +1158,6 @@ export function reconcileOnChainPledge(
   if (!progress.canPledge) {
     throw toServiceError('Campaign is no longer accepting pledges.', 400, 'INVALID_CAMPAIGN_STATE');
   }
-
-
 
   const insertedNewPledge = db.transaction(() => {
     // Re-check contributor limit within transaction to prevent race conditions

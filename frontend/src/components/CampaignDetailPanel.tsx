@@ -1,5 +1,3 @@
-
-
 import { FormEvent, useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { MousePointer2, Download, Link as LinkIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -102,18 +100,22 @@ export function CampaignDetailPanel({
   const handleCopyLink = useCallback(() => {
     if (!campaign) return;
     const url = `${window.location.origin}/campaigns/${campaign.id}`;
-    navigator.clipboard.writeText(url).then(() => {
-      addToast('Campaign link copied to clipboard.', 'success', { href: url, label: url.slice(0, 40) + '…' });
-    }).catch(() => {
-      addToast('Failed to copy link.', 'error');
-    });
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        addToast('Campaign link copied to clipboard.', 'success', {
+          href: url,
+          label: url.slice(0, 40) + '…',
+        });
+      })
+      .catch(() => {
+        addToast('Failed to copy link.', 'error');
+      });
   }, [campaign, addToast]);
 
   useEffect(() => {
     setBannerImageError(false);
   }, [campaign?.id, connectedWallet]);
-
-
 
   const showSkeleton = useMinDisplayTime(isLoading);
   if (showSkeleton) {
@@ -324,11 +326,19 @@ export function CampaignDetailPanel({
         </article>
         <article className="detail-stat">
           <span>Time left</span>
-          <strong><Countdown deadline={activeCampaign.deadline} /></strong>
+          <strong>
+            <Countdown deadline={activeCampaign.deadline} />
+          </strong>
         </article>
       </div>
 
-      <Suspense fallback={<div className="contributor-summary" aria-busy="true">Loading contributors…</div>}>
+      <Suspense
+        fallback={
+          <div className="contributor-summary" aria-busy="true">
+            Loading contributors…
+          </div>
+        }
+      >
         <ContributorSummary
           campaignId={activeCampaign.id}
           assetCode={activeCampaign.assetCode}

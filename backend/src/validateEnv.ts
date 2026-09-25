@@ -6,7 +6,10 @@ const nonNegativeIntRegex = /^\d+$/;
 export const envSchema = z
   .object({
     // Required in production
-    CONTRACT_ID: z.string().optional().describe('Required in production for Soroban pledge signing'),
+    CONTRACT_ID: z
+      .string()
+      .optional()
+      .describe('Required in production for Soroban pledge signing'),
 
     // Environment & Port
     PORT: z.string().optional().describe('default: 3001'),
@@ -31,9 +34,18 @@ export const envSchema = z
     // CORS & Authentication
     // SECURITY: Default is empty (allows all) for local dev convenience. In production, this MUST be set to explicit origins.
     // Risk: Leaving this empty or using '*' in production allows any website to make authenticated requests to your API (CSRF/credential theft).
-    ALLOWED_ORINS: z.string().optional().describe('default: (empty — all origins allowed in dev); REQUIRED in production'),
-    CORS_ALLOWED_ORIGINS: z.string().optional().describe('backwards-compatible alias for ALLOWED_ORIGINS'),
-    API_KEYS: z.string().optional().describe('Comma-separated valid API keys; required in production'),
+    ALLOWED_ORINS: z
+      .string()
+      .optional()
+      .describe('default: (empty — all origins allowed in dev); REQUIRED in production'),
+    CORS_ALLOWED_ORIGINS: z
+      .string()
+      .optional()
+      .describe('backwards-compatible alias for ALLOWED_ORIGINS'),
+    API_KEYS: z
+      .string()
+      .optional()
+      .describe('Comma-separated valid API keys; required in production'),
 
     // Assets & Contract settings
     ALLOWED_ASSETS: z.string().optional().describe('default: USDC,XLM'),
@@ -86,7 +98,10 @@ export const envSchema = z
       .regex(nonNegativeIntRegex, 'HEADERS_TIMEOUT_MS must be a non-negative integer')
       .optional(),
 
-    WEBHOOK_URL: z.string().optional().describe('Configurable webhook URL for status change notifications'),
+    WEBHOOK_URL: z
+      .string()
+      .optional()
+      .describe('Configurable webhook URL for status change notifications'),
     WEBHOOK_SECRET: z.string().optional().describe('Secret used to compute HMAC-SHA256 signature'),
   })
   .superRefine((data, ctx) => {
@@ -127,7 +142,10 @@ export const envSchema = z
       }
 
       const originsStr = data.ALLOWED_ORIGINS || data.CORS_ALLOWED_ORIGINS || '';
-      const originList = originsStr.split(',').map((o) => o.trim()).filter(Boolean);
+      const originList = originsStr
+        .split(',')
+        .map((o) => o.trim())
+        .filter(Boolean);
       if (originList.length === 0 || originList.includes('*')) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -159,4 +177,3 @@ export function validateEnv(env: Record<string, string | undefined> = process.en
     throw new Error(errorMessage);
   }
 }
-

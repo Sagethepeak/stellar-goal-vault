@@ -130,4 +130,3 @@ describe('redactSensitive (issue #965)', () => {
     expect((redacted.nested as Record<string, unknown>).path).toBe('/deps');
   });
 });
-

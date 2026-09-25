@@ -1,7 +1,6 @@
 import pino from 'pino';
 import { getRequestId } from './requestContext';
 
-
 /** Keys that must never appear in logs (dependency policy / auth / wallets). */
 const SENSITIVE_KEY_RE =
   /^(authorization|cookie|set-cookie|x-api-key|api[_-]?key|secret|password|private[_-]?key|seed|mnemonic|token|access[_-]?token|refresh[_-]?token|client[_-]?secret|wallet[_-]?secret)$/i;
@@ -10,7 +9,8 @@ export function redactSensitive(value: unknown, depth = 0): unknown {
   if (depth > 6 || value == null) return value;
   if (typeof value === 'string') {
     if (/^Bearer\s+\S+/i.test(value)) return 'Bearer [REDACTED]';
-    if (/^ghp_[A-Za-z0-9]+/.test(value) || /^gho_[A-Za-z0-9]+/.test(value)) return '[REDACTED_TOKEN]';
+    if (/^ghp_[A-Za-z0-9]+/.test(value) || /^gho_[A-Za-z0-9]+/.test(value))
+      return '[REDACTED_TOKEN]';
     return value;
   }
   if (Array.isArray(value)) return value.map((v) => redactSensitive(v, depth + 1));
@@ -72,16 +72,21 @@ export const logger = pino({
       'creator',
     ],
     censor: (value: any, path: string[]) => {
-      if (typeof value === 'string' && (path.includes('address') || path.includes('creator')) && value.startsWith('G') && value.length > 50) {
+      if (
+        typeof value === 'string' &&
+        (path.includes('address') || path.includes('creator')) &&
+        value.startsWith('G') &&
+        value.length > 50
+      ) {
         return `${value.slice(0, 5)}...${value.slice(-5)}`;
       }
       return '[REDACTED]';
-    }
+    },
   },
   mixin() {
     const requestId = getRequestId();
     return requestId ? { requestId } : {};
-  }
+  },
 });
 
 export function logInfo(event: string, fields: LogFields, _configuredLevel?: LogLevel): void {
@@ -112,7 +117,7 @@ export function logError(
       message: normalizedError.message,
       stack: normalizedError.stack,
       name: normalizedError.name,
-    }
+    },
   });
 }
 
@@ -128,7 +133,7 @@ export function logRequest(
 ): void {
   const durationMs = Number(request.durationMs.toFixed(2));
   const level = request.status >= 500 ? 'error' : request.status >= 400 ? 'warn' : 'info';
-  
+
   const payload = {
     event: 'http_request',
     message: `${request.method} ${request.path} ${request.status} ${durationMs}ms`,

@@ -85,16 +85,14 @@ describe('GET /api/health', () => {
     });
 
     it('returns HTTP 503 and status "degraded" when database is unreachable', async () => {
-      vi.spyOn(
-        await import('./services/db'),
-        'checkDbHealth',
-      ).mockReturnValue({ status: 'down', reachable: false, error: 'Connection failed' });
+      vi.spyOn(await import('./services/db'), 'checkDbHealth').mockReturnValue({
+        status: 'down',
+        reachable: false,
+        error: 'Connection failed',
+      });
 
       // Also stub indexer as healthy so we isolate the DB failure
-      vi.spyOn(
-        await import('./services/eventIndexer'),
-        'getIndexerStatus',
-      ).mockReturnValue({
+      vi.spyOn(await import('./services/eventIndexer'), 'getIndexerStatus').mockReturnValue({
         lastSuccessfulPollTime: Date.now(),
         lastKnownLedger: 1,
         isHealthy: true,
@@ -102,7 +100,7 @@ describe('GET /api/health', () => {
         lagMs: 5000,
         freshness: 'fresh',
         staleLagMs: 300000,
-        freshLagMs: 30000
+        freshLagMs: 30000,
       });
 
       const res = await request(app).get('/api/health');
@@ -112,15 +110,13 @@ describe('GET /api/health', () => {
     });
 
     it('includes database.error string when database is down', async () => {
-      vi.spyOn(
-        await import('./services/db'),
-        'checkDbHealth',
-      ).mockReturnValue({ status: 'down', reachable: false, error: 'SQLITE_CANTOPEN' });
+      vi.spyOn(await import('./services/db'), 'checkDbHealth').mockReturnValue({
+        status: 'down',
+        reachable: false,
+        error: 'SQLITE_CANTOPEN',
+      });
 
-      vi.spyOn(
-        await import('./services/eventIndexer'),
-        'getIndexerStatus',
-      ).mockReturnValue({
+      vi.spyOn(await import('./services/eventIndexer'), 'getIndexerStatus').mockReturnValue({
         lastSuccessfulPollTime: Date.now(),
         lastKnownLedger: 1,
         isHealthy: true,
@@ -128,7 +124,7 @@ describe('GET /api/health', () => {
         lagMs: 0,
         freshness: 'fresh',
         staleLagMs: 300000,
-        freshLagMs: 30000
+        freshLagMs: 30000,
       });
 
       const res = await request(app).get('/api/health');
@@ -153,15 +149,12 @@ describe('GET /api/health', () => {
     });
 
     it('returns HTTP 503 when indexer is unhealthy', async () => {
-      vi.spyOn(
-        await import('./services/db'),
-        'checkDbHealth',
-      ).mockReturnValue({ status: 'up', reachable: true });
+      vi.spyOn(await import('./services/db'), 'checkDbHealth').mockReturnValue({
+        status: 'up',
+        reachable: true,
+      });
 
-      vi.spyOn(
-        await import('./services/eventIndexer'),
-        'getIndexerStatus',
-      ).mockReturnValue({
+      vi.spyOn(await import('./services/eventIndexer'), 'getIndexerStatus').mockReturnValue({
         lastSuccessfulPollTime: null,
         lastKnownLedger: 0,
         isHealthy: false,
@@ -180,15 +173,12 @@ describe('GET /api/health', () => {
     });
 
     it('returns HTTP 200 when both DB and indexer are healthy', async () => {
-      vi.spyOn(
-        await import('./services/db'),
-        'checkDbHealth',
-      ).mockReturnValue({ status: 'up', reachable: true });
+      vi.spyOn(await import('./services/db'), 'checkDbHealth').mockReturnValue({
+        status: 'up',
+        reachable: true,
+      });
 
-      vi.spyOn(
-        await import('./services/eventIndexer'),
-        'getIndexerStatus',
-      ).mockReturnValue({
+      vi.spyOn(await import('./services/eventIndexer'), 'getIndexerStatus').mockReturnValue({
         lastSuccessfulPollTime: Date.now(),
         lastKnownLedger: 42,
         isHealthy: true,
@@ -196,7 +186,7 @@ describe('GET /api/health', () => {
         lagMs: 8000,
         freshness: 'fresh',
         staleLagMs: 300000,
-        freshLagMs: 30000
+        freshLagMs: 30000,
       });
 
       const res = await request(app).get('/api/health');
@@ -273,10 +263,9 @@ describe('GET /api/health/deep', () => {
       const res = await request(app).get('/api/health/deep');
       const { components } = res.body as { components: Record<string, { status: string }> };
       for (const [name, component] of Object.entries(components)) {
-        expect(
-          component.status,
-          `components.${name}.status should be "up" or "down"`,
-        ).toMatch(/^(up|down)$/);
+        expect(component.status, `components.${name}.status should be "up" or "down"`).toMatch(
+          /^(up|down)$/,
+        );
       }
     });
   });
@@ -297,15 +286,13 @@ describe('GET /api/health/deep', () => {
 
   describe('overall flag', () => {
     it('returns overall "down" when db is unreachable', async () => {
-      vi.spyOn(
-        await import('./services/db'),
-        'checkDbHealth',
-      ).mockReturnValue({ status: 'down', reachable: false, error: 'disk I/O error' });
+      vi.spyOn(await import('./services/db'), 'checkDbHealth').mockReturnValue({
+        status: 'down',
+        reachable: false,
+        error: 'disk I/O error',
+      });
 
-      vi.spyOn(
-        await import('./services/eventIndexer'),
-        'getIndexerStatus',
-      ).mockReturnValue({
+      vi.spyOn(await import('./services/eventIndexer'), 'getIndexerStatus').mockReturnValue({
         lastSuccessfulPollTime: Date.now(),
         lastKnownLedger: 10,
         isHealthy: true,
@@ -313,7 +300,7 @@ describe('GET /api/health/deep', () => {
         lagMs: 1000,
         freshness: 'fresh',
         staleLagMs: 300000,
-        freshLagMs: 30000
+        freshLagMs: 30000,
       });
 
       const res = await request(app).get('/api/health/deep');
@@ -323,15 +310,12 @@ describe('GET /api/health/deep', () => {
     });
 
     it('returns overall "down" when indexer has consecutive failures', async () => {
-      vi.spyOn(
-        await import('./services/db'),
-        'checkDbHealth',
-      ).mockReturnValue({ status: 'up', reachable: true });
+      vi.spyOn(await import('./services/db'), 'checkDbHealth').mockReturnValue({
+        status: 'up',
+        reachable: true,
+      });
 
-      vi.spyOn(
-        await import('./services/eventIndexer'),
-        'getIndexerStatus',
-      ).mockReturnValue({
+      vi.spyOn(await import('./services/eventIndexer'), 'getIndexerStatus').mockReturnValue({
         lastSuccessfulPollTime: null,
         lastKnownLedger: 0,
         isHealthy: false,
@@ -364,10 +348,7 @@ describe('GET /api/health/deep', () => {
   describe('error handling', () => {
     it('returns 503 with overall "down" on unexpected thrown error', async () => {
       // Force the db check to throw rather than return a struct
-      vi.spyOn(
-        await import('./services/db'),
-        'checkDbHealth',
-      ).mockImplementation(() => {
+      vi.spyOn(await import('./services/db'), 'checkDbHealth').mockImplementation(() => {
         throw new Error('unexpected internal failure');
       });
 

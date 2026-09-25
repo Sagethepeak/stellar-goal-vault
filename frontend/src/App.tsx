@@ -1,29 +1,29 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { CampaignDetailPanel } from "./components/CampaignDetailPanel";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import { FundedConfetti } from "./components/FundedConfetti";
-import { KeyboardShortcutsOverlay } from "./components/KeyboardShortcutsOverlay";
-import { lazy, Suspense } from "react";
-import { CampaignsTable } from "./components/CampaignsTable";
-import { CampaignTimeline } from "./components/CampaignTimeline";
-import { NotificationBell } from "./components/NotificationBell";
-import { CreateCampaignForm } from "./components/CreateCampaignForm";
-import { IssueBacklog } from "./components/IssueBacklog";
-import { SkeletonAnalytics } from "./components/SkeletonAnalytics";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { CampaignDetailPanel } from './components/CampaignDetailPanel';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { FundedConfetti } from './components/FundedConfetti';
+import { KeyboardShortcutsOverlay } from './components/KeyboardShortcutsOverlay';
+import { lazy, Suspense } from 'react';
+import { CampaignsTable } from './components/CampaignsTable';
+import { CampaignTimeline } from './components/CampaignTimeline';
+import { NotificationBell } from './components/NotificationBell';
+import { CreateCampaignForm } from './components/CreateCampaignForm';
+import { IssueBacklog } from './components/IssueBacklog';
+import { SkeletonAnalytics } from './components/SkeletonAnalytics';
 
 const CreatorAnalytics = lazy(() =>
-  import("./components/CreatorAnalytics").then((m) => ({ default: m.CreatorAnalytics })),
+  import('./components/CreatorAnalytics').then((m) => ({ default: m.CreatorAnalytics })),
 );
-import { InstallPrompt } from "./components/InstallPrompt";
-import { OfflineBanner } from "./components/OfflineBanner";
+import { InstallPrompt } from './components/InstallPrompt';
+import { OfflineBanner } from './components/OfflineBanner';
 import {
   TransactionPreviewModal,
   TransactionPreviewData,
-} from "./components/TransactionPreviewModal";
-import { ToastContainer } from "./components/ToastContainer";
-import { WalletWidget } from "./components/WalletWidget";
-import { WalletPickerModal } from "./components/WalletPickerModal";
+} from './components/TransactionPreviewModal';
+import { ToastContainer } from './components/ToastContainer';
+import { WalletWidget } from './components/WalletWidget';
+import { WalletPickerModal } from './components/WalletPickerModal';
 import {
   claimCampaign,
   createCampaign,
@@ -36,32 +36,23 @@ import {
   refundCampaign,
   softDeleteCampaign,
 } from './services/api';
-import {
-  submitFreighterClaim,
-  submitFreighterPledge,
-} from "./services/freighter";
-import { submitRefundTransaction } from "./services/soroban";
-import { useWallet } from "./hooks/useWallet";
-import { useLocalStorage } from "./hooks/useLocalStorage";
-import { useToast } from "./hooks/useToast";
-import { useOpenGraph } from "./hooks/useOpenGraph";
-import { useCampaignShareCard } from "./components/CampaignShareCard";
-import { didCampaignBecomeFunded } from "./lib/fundingCelebration";
-import { appendUniqueCampaigns } from "./lib/campaignListPagination";
-import {
-  ApiError,
-  AppConfig,
-  Campaign,
-  CampaignEvent,
-  OpenIssue,
-} from "./types/campaign";
+import { submitFreighterClaim, submitFreighterPledge } from './services/freighter';
+import { submitRefundTransaction } from './services/soroban';
+import { useWallet } from './hooks/useWallet';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import { useToast } from './hooks/useToast';
+import { useOpenGraph } from './hooks/useOpenGraph';
+import { useCampaignShareCard } from './components/CampaignShareCard';
+import { didCampaignBecomeFunded } from './lib/fundingCelebration';
+import { appendUniqueCampaigns } from './lib/campaignListPagination';
+import { ApiError, AppConfig, Campaign, CampaignEvent, OpenIssue } from './types/campaign';
 
-const DEFAULT_NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
-const MAINNET_PASSPHRASE = "Public Global Stellar Network ; September 2015";
-const THEME_STORAGE_KEY = "stellar-goal-vault-theme";
-const SORT_ORDER_KEY = "stellar-goal-vault-sort-order";
-const FILTER_STATE_KEY = "stellar-goal-vault-filter-state";
-const LIST_STATE_KEY = "sgv-list-state";
+const DEFAULT_NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
+const MAINNET_PASSPHRASE = 'Public Global Stellar Network ; September 2015';
+const THEME_STORAGE_KEY = 'stellar-goal-vault-theme';
+const SORT_ORDER_KEY = 'stellar-goal-vault-sort-order';
+const FILTER_STATE_KEY = 'stellar-goal-vault-filter-state';
+const LIST_STATE_KEY = 'sgv-list-state';
 const CAMPAIGN_PAGE_SIZE = 20;
 
 type SavedListState = {
@@ -409,10 +400,7 @@ function App() {
         if (restoredState && !requestedCampaignId) {
           // Bounded initial work: cap restored pages to 3 to avoid unbounded fetch from tampered storage
           const boundedPages = Math.min(Math.max(1, restoredState.pages), 3);
-          data = await loadInitialCampaignPages(
-            restoredState.search,
-            boundedPages,
-          );
+          data = await loadInitialCampaignPages(restoredState.search, boundedPages);
           requestAnimationFrame(() => {
             window.scrollTo(0, restoredState?.scrollY ?? 0);
           });
@@ -533,7 +521,7 @@ function App() {
     setIsConnectingWallet(true);
     try {
       await wallet.connect(walletType as any, networkPassphrase);
-      addToast(`Wallet connected: ${wallet.publicKey?.slice(0, 16)}...`, "success");
+      addToast(`Wallet connected: ${wallet.publicKey?.slice(0, 16)}...`, 'success');
     } finally {
       setIsConnectingWallet(false);
     }
@@ -541,7 +529,7 @@ function App() {
 
   function handleDisconnectWallet() {
     wallet.disconnect();
-    addToast("Wallet disconnected.", "success");
+    addToast('Wallet disconnected.', 'success');
   }
 
   // Account watching is handled by individual wallet adapters
@@ -595,7 +583,7 @@ function App() {
       await refreshSelectedData(campaignId);
       addToast(
         `Pledged ${amount} ${assetCode}. Tx: ${transactionResult.transactionHash.slice(0, 12)}…`,
-        "success",
+        'success',
         {
           href: stellarExpertTxUrl(transactionResult.transactionHash, appConfig?.networkPassphrase),
           label: 'View on Stellar Expert',
